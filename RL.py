@@ -4,7 +4,7 @@ import random
 
 class RL():
     def __init__(self, row, col, obstacle_pos, goal_pos, \
-                 discount_rate, epsilon, neg_reward, seed):
+                 discount_rate, epsilon, seed):
         # model params
         self.row = row # number of rows of grid
         self.col = col # number of columns of grid
@@ -13,19 +13,18 @@ class RL():
         # other params
         self.discount_rate = discount_rate
         self.epsilon = epsilon
-        self.neg_reward = neg_reward
 
         # initialise model
         self.policy = self.initialise_policy()
         self.q_value = self.initialise_q_value()
-        self.reward = self.initialise_reward(obstacle_pos, goal_pos, seed)
+        self.reward = self.reward_shape(self.initialise_reward(obstacle_pos, goal_pos, seed))
 
     ################################################################
     # initialise map
     ################################################################
 
     def initialise_reward(self, obstacle_pos, goal_pos, seed):
-        reward = np.ones((self.row,self.col))*self.neg_reward
+        reward = np.zeros((self.row,self.col))
 
         # if obstacle not given, randomise 25% of tiles to be obstacles
         if seed != None:
@@ -73,7 +72,37 @@ class RL():
         q_value[self.row-1,:,2] = -2147483648
         q_value[:,0,3] = -2147483648
         return q_value
+    
+    def reward_shape(self, reward):
+        res = reward.copy()
+        goal_pos = np.where(reward == 1)
+        obs_pos = np.where(reward == -1)
+        others = np.where((reward != -1) == (reward != 1))
+        MAX_ATT_DIST = (self.row + self.col)
+        MAX_REP_DIST = 1
+        BETA = 1
+        for i in range(len(others[0])):
+            att_r = self.mat_dist(goal_pos[0][0], goal_pos[1][0], \
+                                  others[0][i], others[1][i])
+            att = 0.99 / att_r if att_r < MAX_ATT_DIST else 0
+            potential = att
+            for j in range(len(obs_pos[0])):
+                obs_r = self.mat_dist(obs_pos[0][j], obs_pos[1][j], \
+                                      others[0][i], others[1][i])
+                rep = -BETA/(obs_r**2)*(1/obs_r-1/MAX_REP_DIST) if \
+                    obs_r <= MAX_REP_DIST else \
+                        0
+                potential += rep
+            res[others[0][i], others[1][i]] = potential
+        return res
+            
+    ################################################################
+    # helper
+    ################################################################
 
+    def mat_dist(self, x1, y1, x2, y2):
+        return abs(x1 - x2) + abs(y1 - y2)
+    
     ################################################################
     # find path
     ################################################################
@@ -101,15 +130,20 @@ class RL():
         self.policy[i, j, a_star] = \
             1 - self.epsilon + self.epsilon/len(permitted_actions)
                         
-    def generate_path(self):
+    def generate_path(self, n):
         ep = self.generate_episode()
-        while True:
+        j = 0
+        for i in range(n):
             self.update_path()
             new_ep = self.generate_episode()
             if np.array_equal(ep, new_ep) and ep[-1][3] == 1:
-                break
+                j += 1
+            else:
+                j = 0
             ep = new_ep
-        return ep
+            if (j == 100):
+                break
+        return self.get_path_map()
     
     ################################################################
     # print map
@@ -120,12 +154,12 @@ class RL():
         for i in self.reward:
             line = "\n|"
             for j in i:
-                if j == self.neg_reward:
-                    line += "   "
-                elif j == -1:
+                if j == -1:
                     line += " X "
                 elif j == 1:
-                    line += ' G '
+                    line += " G "
+                else:
+                    line += "   "
             line += "|"
             res += line
         res += ("\n" + "=" * (self.col * 3 + 2))
@@ -134,8 +168,10 @@ class RL():
     def get_best_path(self):
         i = 0
         j = 0
-        path = []
-        while not (self.reward[i,j] == -1 or self.reward[i,j] == 1):
+        path = np.empty((0,2), int)
+        n = 0
+        while not (self.reward[i,j] == -1 or self.reward[i,j] == 1) and \
+              n < self.row * self.col:
             pol = self.q_value[i, j].argmax()
             next_i = i
             next_j = j
@@ -147,9 +183,10 @@ class RL():
                 next_i = min(i+1, self.row-1)
             else:
                 next_j = max(j-1, 0)
-            path.append((i, j))
+            path = np.append(path, np.array([[i, j]]), axis = 0)
             i = next_i
             j = next_j
+            n += 1
         return path
     
     def get_path_map(self):
@@ -158,12 +195,12 @@ class RL():
         for i in self.reward:
             tmp = []
             for j in i:
-                if j == self.neg_reward:
-                    tmp.append("   ")
-                elif j == -1:
+                if j == -1:
                     tmp.append(" X ")
                 elif j == 1:
-                    tmp.append(' G ')
+                    tmp.append(" G ")
+                else:
+                    tmp.append("   ")
             path_map.append(tmp)
         for i in path:
             path_map[i[0]][i[1]] = " O "

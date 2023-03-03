@@ -5,9 +5,9 @@ from RL import RL
 
 class Monte_carlo_without_es(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.2, neg_reward = 0.04, seed = None):
+                 discount_rate = 0.9, epsilon = 0.2, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
-                       discount_rate, epsilon, neg_reward, seed)
+                       discount_rate, epsilon, seed)
 
         # initialise model
         self.g_list = {}
