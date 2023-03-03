@@ -4,31 +4,40 @@ import random
 
 class Sarsa():
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.1, seed = 1):
+                 discount_rate = 0.9, epsilon = 0.1, neg_reward = 0.04, seed = 1):
         # model params
         self.row = row # number of rows of grid
         self.col = col # number of columns of grid
         self.num_actions = 4
+
+        # other params
+        self.discount_rate = discount_rate
+        self.epsilon = epsilon
+        self.neg_reward = neg_reward
 
         # initialise model
         self.reward = self.initialise_reward(obstacle_pos, goal_pos, seed)
         self.policy = self.initialise_policy()
         self.q_value = self.initialise_q_value()
 
-        # other params
-        self.discount_rate = discount_rate
-        self.epsilon = epsilon
+    ################################################################
+    # initialise map
+    ################################################################
 
     def initialise_reward(self, obstacle_pos, goal_pos, seed):
-        reward = np.ones((self.row,self.col))*-0.04
+        reward = np.ones((self.row,self.col))*self.neg_reward
 
         # if obstacle not given, randomise 25% of tiles to be obstacles
-        random.seed(seed)
+        if seed != None:
+            random.seed(seed)
         if obstacle_pos == None:
             for i in range(int(0.25 * self.row * self.col)):
                 while True:
                     rand_i = random.randint(0, self.row-1)
                     rand_j = random.randint(0, self.col-1)
+                    # prevent origin from being obstacle
+                    if (rand_i == 0 and rand_j == 0):
+                        continue
                     if reward[rand_i, rand_j] != -1 and reward[rand_i, rand_j] != 1: 
                         reward[rand_i, rand_j] = -1
                         break
@@ -64,6 +73,10 @@ class Sarsa():
         q_value[self.row-1,:,2] = -2147483648
         q_value[:,0,3] = -2147483648
         return q_value
+
+    ################################################################
+    # find path
+    ################################################################
 
     def generate_episode(self):
         i = 0
@@ -135,3 +148,69 @@ class Sarsa():
                 break
             ep = new_ep
         return ep
+    
+    ################################################################
+    # print map
+    ################################################################
+
+    def get_map(self):
+        res = "=" * (self.col * 3 + 2)
+        for i in self.reward:
+            line = "\n|"
+            for j in i:
+                if j == self.neg_reward:
+                    line += "   "
+                elif j == -1:
+                    line += " X "
+                elif j == 1:
+                    line += ' G '
+            line += "|"
+            res += line
+        res += ("\n" + "=" * (self.col * 3 + 2))
+        return res
+    
+    def get_best_path(self):
+        i = 0
+        j = 0
+        path = []
+        while not (self.reward[i,j] == -1 or self.reward[i,j] == 1):
+            pol = self.q_value[i, j].argmax()
+            next_i = i
+            next_j = j
+            if pol == 0:
+                next_i = max(i-1, 0)
+            elif pol == 1:
+                next_j = min(j+1, self.col-1)
+            elif pol == 2:
+                next_i = min(i+1, self.row-1)
+            else:
+                next_j = max(j-1, 0)
+            path.append((i, j))
+            i = next_i
+            j = next_j
+        return path
+    
+    def get_path_map(self):
+        path = self.get_best_path()
+        path_map = []
+        for i in self.reward:
+            tmp = []
+            for j in i:
+                if j == self.neg_reward:
+                    tmp.append("   ")
+                elif j == -1:
+                    tmp.append(" X ")
+                elif j == 1:
+                    tmp.append(' G ')
+            path_map.append(tmp)
+        for i in path:
+            path_map[i[0]][i[1]] = " O "
+        res = "=" * (self.col * 3 + 2)
+        for i in path_map:
+            line = "\n|"
+            for j in i:
+                line += j
+            line += "|"
+            res += line
+        res += ("\n" + "=" * (self.col * 3 + 2))
+        return res
