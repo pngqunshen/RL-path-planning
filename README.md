@@ -18,7 +18,7 @@ Current techniques
 
 Update rule:
 
-$Q(S_t,A_t)\larr Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1}, A_{t+1})-Q(S_t,A_t)]$
+$Q(S_t,A_t)← Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1}, A_{t+1})-Q(S_t,A_t)]$
 
 ![alt text](img/Sarsa_pseudocode.png?raw=true)
 
@@ -26,7 +26,7 @@ $Q(S_t,A_t)\larr Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1}, A_{t+1})-Q(S_t,A_t)
 
 Update rule:
 
-$Q(S_t,A_t)\larr Q(S_t,A_t)+\alpha[R_{t+1}+\gamma \text{max}_{a'}Q(S_{t+1}, a')-Q(S_t,A_t)]$
+$Q(S_t,A_t)← Q(S_t,A_t)+\alpha[R_{t+1}+\gamma \text{max}_{a'}Q(S_{t+1}, a')-Q(S_t,A_t)]$
 
 ![alt text](img/Q_learning_pseudocode.png?raw=true)
 

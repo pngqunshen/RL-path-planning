@@ -5,12 +5,12 @@ from RL import RL
 
 class Monte_carlo_without_es(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.2, seed = None):
+                 discount_rate = 0.9, epsilon = 0.3, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
                        discount_rate, epsilon, seed)
 
         # initialise model
-        self.g_list = {}
+        self.Returns = {}
 
     ################################################################
     # find path
@@ -36,16 +36,6 @@ class Monte_carlo_without_es(RL):
             i = next_i
             j = next_j
         return ep
-            
-    def find_policy_to_use(self, i, j):
-        # random number to generate policy
-        pol = self.policy[i, j]
-        rand = random.random()
-        for k in range(len(pol)):
-            if rand <= pol[k]:
-                return k
-            rand -= pol[k]
-        return None # should not reach here
 
     def update_path(self):
         ep = self.generate_episode()
@@ -62,8 +52,10 @@ class Monte_carlo_without_es(RL):
             R = ep[i, 3]
             g = g * self.discount_rate + R
             if first_visit[S[0], S[1], A] == i:
-                if ((S[0], S[1]), A) not in self.g_list:
-                    self.g_list[((S[0], S[1]), A)] = np.empty((0), float)
-                self.g_list[((S[0], S[1]), A)] = np.append(self.g_list[((S[0], S[1]), A)], g)
-                self.q_value[S[0], S[1], A] = self.g_list[((S[0], S[1]), A)].mean()
+                if ((S[0], S[1]), A) not in self.Returns:
+                    self.Returns[((S[0], S[1]), A)] = np.empty((0), float)
+                # if len(self.Returns[((S[0], S[1]), A)]) == self.row*self.col*self.num_actions:
+                #     self.Returns[((S[0], S[1]), A)] = self.Returns[((S[0], S[1]), A)][1:]
+                self.Returns[((S[0], S[1]), A)] = np.append(self.Returns[((S[0], S[1]), A)], g)
+                self.q_value[S[0], S[1], A] = self.Returns[((S[0], S[1]), A)].mean()
                 self.epsilon_greedy(S[0], S[1])

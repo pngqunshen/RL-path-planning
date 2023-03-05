@@ -17,8 +17,8 @@ class Sarsa(RL):
         i = 0
         j = 0
         ep = np.empty((0,7), int)
+        pol = self.find_policy_to_use(i, j)
         while not (self.reward[i,j] == -1 or self.reward[i,j] == 1):
-            pol = self.find_policy_to_use(i, j)
             next_i = i
             next_j = j
             if pol == 0:
@@ -34,18 +34,9 @@ class Sarsa(RL):
                                           next_i, next_j, next_pol]], int), axis=0)
             i = next_i
             j = next_j
+            pol = next_pol
         return ep
-            
-    def find_policy_to_use(self, i, j):
-        # random number to generate policy
-        pol = self.policy[i, j]
-        rand = random.random()
-        for k in range(len(pol)):
-            if rand <= pol[k]:
-                return k
-            rand -= pol[k]
-        return None # should not reach here
-    
+
     def update_path(self):
         ep = self.generate_episode()
         for i in range(len(ep)):
@@ -54,8 +45,8 @@ class Sarsa(RL):
             R = ep[i, 3]
             SN = ep[i, 4:6]
             AN = ep[i, 6]
-            alpha = 1 / i if i != 0 else 1
+            learning_rate = 1 / i if i != 0 else 1
             self.q_value[S[0], S[1], A] += \
-                (alpha*(R+self.discount_rate*self.q_value[SN[0], SN[1], AN] \
+                (learning_rate*(R+self.discount_rate*self.q_value[SN[0], SN[1], AN] \
                              -self.q_value[S[0], S[1], A]))
             self.epsilon_greedy(S[0], S[1])
