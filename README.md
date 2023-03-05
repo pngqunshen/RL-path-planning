@@ -18,7 +18,7 @@ Current techniques
 
 Update rule:
 
-$Q(S_t,A_t)← Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1}, A_{t+1})-Q(S_t,A_t)]$
+$$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma Q\left(S_{t+1}, A_{t+1}\right)-Q\left(S_t,A_t\right)\right]$$
 
 ![alt text](img/Sarsa_pseudocode.png?raw=true)
 
@@ -26,13 +26,13 @@ $Q(S_t,A_t)← Q(S_t,A_t)+\alpha[R_{t+1}+\gamma Q(S_{t+1}, A_{t+1})-Q(S_t,A_t)]$
 
 Update rule:
 
-$Q(S_t,A_t)← Q(S_t,A_t)+\alpha[R_{t+1}+\gamma \text{max}_{a'}Q(S_{t+1}, a')-Q(S_t,A_t)]$
+$$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma \text{max}_{a'}Q\left(S_{t+1}, a'\right)-Q\left(S_t,A_t\right)\right]$$
 
 ![alt text](img/Q_learning_pseudocode.png?raw=true)
 
 ## $\epsilon$-greedy policy
-$\pi(a|s)=
+$$\pi\left(a|s\right)
 \begin{cases}
-    1-\epsilon+\frac{\epsilon}{|A(s)|}, & \text{if}\ a=A^*≜\text{argmax}_aQ(s,a) \\
-    \frac{\epsilon}{|A(s)|}, & \text{if}\ a\neq A^*
-\end{cases}$
+    1-\epsilon+\frac{\epsilon}{\left|A\left(s\right)\right|}, & \text{if}\ a=A^*≜\text{argmax}_aQ\left(s,a\right) \\
+    \frac{\epsilon}{\left|A(s)\right|}, & \text{if}\ a\neq A^*
+\end{cases}$$
