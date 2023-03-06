@@ -5,7 +5,7 @@ from RL import RL
 
 class Monte_carlo_without_es(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.3, seed = None):
+                 discount_rate = 0.9, epsilon = 0.1, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
                        discount_rate, epsilon, seed)
 
@@ -45,6 +45,8 @@ class Monte_carlo_without_es(RL):
         ep = self.generate_episode()
         g = 0
         # keeps track of which time step is the first time a action state pair is visited
+        # initialise each state and action pair to 0, loop through in order
+        # and change state action pair value to 1 in first visit
         first_visit = np.zeros((self.row, self.col, self.num_actions))
         for i in range(len(ep)): # loop through entire episode in order
             S = ep[i, 0:2]

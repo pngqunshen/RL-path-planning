@@ -51,7 +51,7 @@ class RL():
         # if obstacle not given, randomise 25% of tiles to be obstacles
         if obstacle_pos == None:
             new_obstacle_pos = [] # to set obstacle
-            for i in range(int(0.25 * self.row * self.col + 1)):
+            for i in range(int(0.25 * self.row * self.col)):
                 while True:
                     # generate random spot to set as obstacle
                     rand_i = random.randint(0, self.row-1)
@@ -231,22 +231,21 @@ class RL():
         a_star = self.q_value[i, j].argmax() # best action based on value
         self.policy[i, j, a_star] = \
             1 - self.epsilon + self.epsilon/len(permitted_actions)
-                        
+
+    """
+    Main method to call after creating the object
+    Program will break once a path to goal is found, and return the
+    number of iterations taken
+
+    n - maximum number of times to iterate
+    """                   
     def generate_path(self, n):
-        # path = self.get_best_path()
-        # j = 0
         for i in range(n):
             self.update_path()
-            # new_path = self.get_best_path()
-            # if np.array_equal(path, new_path) and \
-            #     self.reward[new_path[-1][0], new_path[-1][1]] == 1:
-            #     j += 1
-            # else:
-            #     j = 0
-            # path = new_path
-            # if (j == 100):
-            #     break
-        return self.get_path_map()
+            path = self.get_best_path()
+            if path[-1,0]==self.goal_pos[0] and path[-1,1]==self.goal_pos[1]:
+                break
+        return i
     
     ################################################################
     # print map

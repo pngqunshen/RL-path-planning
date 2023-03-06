@@ -5,7 +5,7 @@ from RL import RL
 
 class Sarsa(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.1, seed = 1):
+                 discount_rate = 0.9, epsilon = 0.1, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
                        discount_rate, epsilon, seed)
 
