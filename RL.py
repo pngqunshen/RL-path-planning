@@ -13,7 +13,7 @@ Usage:
 """
 class RL():
     def __init__(self, row, col, obstacle_pos, goal_pos, \
-                 discount_rate, epsilon, seed):
+                 discount_rate, epsilon, reward_shape, seed):
         # model params
         self.row = row # number of rows of grid
         self.col = col # number of columns of grid
@@ -34,7 +34,13 @@ class RL():
         self.epsilon = epsilon
 
         # initialise model
-        self.reward = self.reward_shape(self.initialise_reward(obstacle_pos, goal_pos, seed))
+        # find reward without reward shaping
+        self.reward = self.initialise_reward(obstacle_pos, goal_pos, seed)
+        # if reward_shape == None, no reward shaping
+        if reward_shape == "manhattan": # perform man dist reward shaping
+            self.reward = self.reward_shape_man_hat(self.reward)
+        elif reward_shape == "apf": # perform apf reward shaping
+            self.reward = self.reward_shape_apf(self.reward)
         self.policy = self.initialise_policy()
         self.q_value = self.initialise_q_value()
 
@@ -113,7 +119,7 @@ class RL():
 
     Based on manhattan distance from each cell to the goal
     """
-    def reward_shape(self, reward):
+    def reward_shape_man_hat(self, reward):
         res = reward.copy() # deep copy to prevent editing original
         goal_pos = np.where(reward == 1)
         others = np.where((reward != -1) == (reward != 1))
@@ -128,6 +134,54 @@ class RL():
                 1-self.man_dist(goal_pos[0][0], goal_pos[1][0], \
                                 others[0][i], others[1][i]) \
                                     / (self.row + self.col)
+        return res
+
+    """
+    Perform reward shaping to decrease the number of iterations required
+    to train the model
+
+    Based on artificial potential field generated from each cell to the goal
+    """
+    def reward_shape_apf(self, reward):
+        res = reward.copy() # deep copy to prevent editing original
+
+        # find position index of important points
+        goal_pos = np.where(reward == 1) # index of goal
+        obs_pos = np.where(reward == -1) # index of obstacles
+        others = np.where((reward != -1) == (reward != 1)) # index of other position
+
+        # params for artificial potential field
+
+        # maximum effective distance of goal, set to max manhattan distance
+        # so entire map is in range
+        MAX_ATT_DIST = (self.row + self.col)
+
+        # maximum effective distance of repulsion, set to 2 so it only
+        # affects the immediate 2 cells
+        MAX_REP_DIST = 2
+
+        # multiplier for repulsion
+        BETA = 1
+
+        for i in range(len(others[0])):
+            # find manhattan distance for attraction
+            att_r = self.man_dist(goal_pos[0][0], goal_pos[1][0], \
+                                  others[0][i], others[1][i])
+            # find attraction from goal
+            att = 0.99 / att_r if att_r < MAX_ATT_DIST else 0
+            potential = att # initialise potential to attraction first
+            # add in repulsion from each obstacle
+            for j in range(len(obs_pos[0])):
+                # find manhattan distance for repulsion
+                obs_r = self.man_dist(obs_pos[0][j], obs_pos[1][j], \
+                                      others[0][i], others[1][i])
+                # find repulsion from each obstacle
+                rep = -BETA/(obs_r**2)*(1/obs_r-1/MAX_REP_DIST) if \
+                    obs_r <= MAX_REP_DIST else \
+                        0
+                potential += rep # add the repulsion to potential
+            # set the reward for this point
+            res[others[0][i], others[1][i]] = potential
         return res
             
     ################################################################
@@ -198,6 +252,8 @@ class RL():
         path = np.append(path, np.array([[i, j]]), axis = 0)
         return path
     
+    
+    
     ################################################################
     # find path
     ################################################################
@@ -205,7 +261,7 @@ class RL():
     def generate_episode(self):
         pass # to be defined
 
-    def update_path(self):
+    def update_path(self, epsilon):
         pass # to be defined
             
     def find_policy_to_use(self, i, j):
@@ -218,7 +274,7 @@ class RL():
             rand -= pol[k]
         return None # should not reach here
     
-    def epsilon_greedy(self, i, j):
+    def epsilon_greedy(self, epsilon, i, j):
         # find total actions
         permitted_actions = []
         if i > 0: permitted_actions.append(0)
@@ -227,10 +283,10 @@ class RL():
         if j > 0: permitted_actions.append(3)
         # set policy
         for act in permitted_actions:
-            self.policy[i, j, act] = self.epsilon/len(permitted_actions)
+            self.policy[i, j, act] = epsilon/len(permitted_actions)
         a_star = self.q_value[i, j].argmax() # best action based on value
         self.policy[i, j, a_star] = \
-            1 - self.epsilon + self.epsilon/len(permitted_actions)
+            1 - epsilon + epsilon/len(permitted_actions)
 
     """
     Main method to call after creating the object
@@ -241,7 +297,19 @@ class RL():
     """                   
     def generate_path(self, n):
         for i in range(n):
-            self.update_path()
+            # calculate decayed epsilon, used if epsilon not defined
+            # epsilon decreases linearly over the entire episode, starting at 1
+            # and ending at p_end (defined below)
+            p_end = 0.1
+            epsilon = (1 - i/n) * (1- p_end) + p_end
+
+            # generate path and check if converge
+            # convergence is defined as a path to the goal, which may not
+            # necessarily be optimal
+            if self.epsilon == None: # epsilon not defined, use decayed epsilon
+                self.update_path(epsilon)
+            else:
+                self.update_path(self.epsilon) # epsilon defined
             path = self.get_best_path()
             if path[-1,0]==self.goal_pos[0] and path[-1,1]==self.goal_pos[1]:
                 break

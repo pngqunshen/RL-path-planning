@@ -5,9 +5,9 @@ from RL import RL
 
 class Monte_carlo_without_es(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.1, seed = None):
+                 discount_rate = 0.9, epsilon = None, reward_shape = None, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
-                       discount_rate, epsilon, seed)
+                       discount_rate, epsilon, reward_shape, seed)
 
         # initialise model
         self.Returns = {}
@@ -40,7 +40,7 @@ class Monte_carlo_without_es(RL):
             j = next_j
         return ep
 
-    def update_path(self):
+    def update_path(self, epsilon):
         # initialise episode and g value
         ep = self.generate_episode()
         g = 0
@@ -67,4 +67,4 @@ class Monte_carlo_without_es(RL):
                 #     self.Returns[((S[0], S[1]), A)] = self.Returns[((S[0], S[1]), A)][1:]
                 self.Returns[((S[0], S[1]), A)] = np.append(self.Returns[((S[0], S[1]), A)], g)
                 self.q_value[S[0], S[1], A] = self.Returns[((S[0], S[1]), A)].mean()
-                self.epsilon_greedy(S[0], S[1])
+                self.epsilon_greedy(epsilon, S[0], S[1])

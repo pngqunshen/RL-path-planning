@@ -5,9 +5,9 @@ from RL import RL
 
 class Sarsa(RL):
     def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
-                 discount_rate = 0.9, epsilon = 0.1, seed = None):
+                 discount_rate = 0.9, epsilon = None, reward_shape = None, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
-                       discount_rate, epsilon, seed)
+                       discount_rate, epsilon, reward_shape, seed)
 
     ################################################################
     # find path
@@ -40,7 +40,7 @@ class Sarsa(RL):
             pol = next_pol
         return ep
 
-    def update_path(self):
+    def update_path(self, epsilon):
         # initialise episode
         ep = self.generate_episode()
         for i in range(len(ep)):
@@ -53,4 +53,4 @@ class Sarsa(RL):
             self.q_value[S[0], S[1], A] += \
                 (learning_rate*(R+self.discount_rate*self.q_value[SN[0], SN[1], AN] \
                              -self.q_value[S[0], S[1], A]))
-            self.epsilon_greedy(S[0], S[1])
+            self.epsilon_greedy(epsilon, S[0], S[1])
