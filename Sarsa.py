@@ -41,16 +41,29 @@ class Sarsa(RL):
         return ep
 
     def update_path(self, epsilon):
-        # initialise episode
-        ep = self.generate_episode()
-        for i in range(len(ep)):
-            S = ep[i, 0:2] # current state
-            A = ep[i, 2] # action
-            R = ep[i, 3] # reward
-            SN = ep[i, 4:6] # next state
-            AN = ep[i, 6] # next action
-            learning_rate = 1 / i if i != 0 else 1 # learning rate alpha = 1/t
-            self.q_value[S[0], S[1], A] += \
-                (learning_rate*(R+self.discount_rate*self.q_value[SN[0], SN[1], AN] \
-                             -self.q_value[S[0], S[1], A]))
-            self.epsilon_greedy(epsilon, S[0], S[1])
+        i = 0
+        j = 0
+        pol = self.find_policy_to_use(i, j)
+        t = 0
+        while self.reward[i, j] != 1 and self.reward[i, j] != -1:
+            next_i = i
+            next_j = j
+            # find next cell
+            if pol == 0: # move up
+                next_i = max(i-1, 0)
+            elif pol == 1: # move right
+                next_j = min(j+1, self.col-1)
+            elif pol == 2: # move down
+                next_i = min(i+1, self.row-1)
+            else: # move left
+                next_j = max(j-1, 0)
+            self.epsilon_greedy(epsilon, next_i, next_j)
+            next_pol = self.find_policy_to_use(next_i, next_j)
+            learning_rate = 1 / t if t != 0 else 1 # learning rate alpha = 1/t
+            self.q_value[i, j, pol] += \
+                (learning_rate*(self.reward[i, j]+self.discount_rate*self.q_value[next_i, next_j, next_pol] \
+                             -self.q_value[i, j, pol]))
+            i = next_i
+            j = next_j
+            pol = next_pol
+            t += 1

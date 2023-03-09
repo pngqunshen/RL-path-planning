@@ -33,6 +33,6 @@ $$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma \tex
 ## $\epsilon$-greedy policy
 $$\pi\left(a|s\right)
 \begin{cases}
-    1-\epsilon+\frac{\epsilon}{\left|A\left(s\right)\right|}, & \text{if}\ a=A^{*}≜\text{argmax}_{a}Q\left(s,a\right) \\
-    \frac{\epsilon}{\left|A\left(s\right)\right|}, & \text{if}\ a\neq A^{*}
+    1-\epsilon+\frac{\epsilon}{\left|A\left(s\right)\right|}, & \text{if}\ a=A^{\*}≜\text{argmax}_{a}Q\left(s,a\right) \\
+    \frac{\epsilon}{\left|A\left(s\right)\right|}, & \text{if}\ a\neq A^{\*}
 \end{cases}$$

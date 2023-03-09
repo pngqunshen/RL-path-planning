@@ -45,14 +45,14 @@ class Monte_carlo_without_es(RL):
         ep = self.generate_episode()
         g = 0
         # keeps track of which time step is the first time a action state pair is visited
-        # initialise each state and action pair to 0, loop through in order
+        # initialise each state and action pair to -1, loop through in order
         # and change state action pair value to 1 in first visit
-        first_visit = np.zeros((self.row, self.col, self.num_actions))
+        first_visit = np.ones((self.row, self.col, self.num_actions)) * -1
         for i in range(len(ep)): # loop through entire episode in order
             S = ep[i, 0:2]
             A = ep[i, 2]
-            # 0 means not visited yet, this time step is first visit
-            if first_visit[S[0], S[1], A] == 0:
+            # -1 means not visited yet, this time step is first visit
+            if first_visit[S[0], S[1], A] == -1:
                 first_visit[S[0], S[1], A] = i
         for i in range(len(ep) - 1, -1, -1): # loop through entire episode in reverse
             S = ep[i, 0:2]
@@ -63,8 +63,9 @@ class Monte_carlo_without_es(RL):
             if first_visit[S[0], S[1], A] == i:
                 if ((S[0], S[1]), A) not in self.Returns:
                     self.Returns[((S[0], S[1]), A)] = np.empty((0), float)
-                # if len(self.Returns[((S[0], S[1]), A)]) == self.row*self.col*self.num_actions:
-                #     self.Returns[((S[0], S[1]), A)] = self.Returns[((S[0], S[1]), A)][1:]
+                # keep a rolling average window of size == number of state action pair
+                if len(self.Returns[((S[0], S[1]), A)]) == self.row*self.col*self.num_actions:
+                    self.Returns[((S[0], S[1]), A)] = self.Returns[((S[0], S[1]), A)][1:]
                 self.Returns[((S[0], S[1]), A)] = np.append(self.Returns[((S[0], S[1]), A)], g)
                 self.q_value[S[0], S[1], A] = self.Returns[((S[0], S[1]), A)].mean()
                 self.epsilon_greedy(epsilon, S[0], S[1])

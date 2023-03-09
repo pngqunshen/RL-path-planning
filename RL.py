@@ -101,7 +101,7 @@ class RL():
     
     def initialise_q_value(self):
         # default q to 0 for all cell
-        q_value = np.zeros((self.row, self.col, self.num_actions))
+        q_value = np.ones((self.row, self.col, self.num_actions))*0.1
         # set q_value of going into the wall to low number, so it will
         # never be considered
         q_value[0,:,0] = -2147483648
@@ -160,6 +160,10 @@ class RL():
         # affects the immediate 2 cells
         MAX_REP_DIST = 2
 
+        # multiplier for attraction, chosen at 0.99 to ensure that the goal
+        # will always have the highest reward
+        ALPHA = 0.99
+
         # multiplier for repulsion
         BETA = 1
 
@@ -168,7 +172,7 @@ class RL():
             att_r = self.man_dist(goal_pos[0][0], goal_pos[1][0], \
                                   others[0][i], others[1][i])
             # find attraction from goal
-            att = 0.99 / att_r if att_r < MAX_ATT_DIST else 0
+            att = ALPHA / att_r if att_r < MAX_ATT_DIST else 0
             potential = att # initialise potential to attraction first
             # add in repulsion from each obstacle
             for j in range(len(obs_pos[0])):
@@ -301,7 +305,7 @@ class RL():
             # epsilon decreases linearly over the entire episode, starting at 1
             # and ending at p_end (defined below)
             p_end = 0.1
-            epsilon = (1 - i/n) * (1- p_end) + p_end
+            epsilon = (1 - i/(n-1)) * (1- p_end) + p_end
 
             # generate path and check if converge
             # convergence is defined as a path to the goal, which may not
@@ -313,7 +317,7 @@ class RL():
             path = self.get_best_path()
             if path[-1,0]==self.goal_pos[0] and path[-1,1]==self.goal_pos[1]:
                 break
-        return i
+        return i, self.get_best_path()
     
     ################################################################
     # print map
