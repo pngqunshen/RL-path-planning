@@ -35,20 +35,20 @@ class RL():
 
         # initialise model
         # find reward without reward shaping
-        self.reward = self.initialise_reward(obstacle_pos, goal_pos, seed)
+        self.reward = self.__initialise_reward(obstacle_pos, goal_pos, seed)
         # if reward_shape == None, no reward shaping
         if reward_shape == "manhattan": # perform man dist reward shaping
             self.reward = self.reward_shape_man_hat(self.reward)
         elif reward_shape == "apf": # perform apf reward shaping
             self.reward = self.reward_shape_apf(self.reward)
-        self.policy = self.initialise_policy()
-        self.q_value = self.initialise_q_value()
+        self.policy = self.__initialise_policy()
+        self.q_value = self.__initialise_q_value()
 
     ################################################################
     # initialise enviroment
     ################################################################
 
-    def initialise_reward(self, obstacle_pos, goal_pos, seed):
+    def __initialise_reward(self, obstacle_pos, goal_pos, seed):
         reward = np.zeros((self.row,self.col))
 
         # check if seed is given
@@ -81,9 +81,9 @@ class RL():
         if self.bfs(reward):
             return reward
         # use None as seed as the current seed value will not work
-        return self.initialise_reward(obstacle_pos, goal_pos, None)
+        return self.__initialise_reward(obstacle_pos, goal_pos, None)
 
-    def initialise_policy(self):
+    def __initialise_policy(self):
         # initially, equal probability of going in any of the legal direction
         pol = np.ones((self.row, self.col, self.num_actions))*(1.0/self.num_actions)
         # remove probabilty of going into the wall
@@ -99,7 +99,7 @@ class RL():
         return pol
     
     
-    def initialise_q_value(self):
+    def __initialise_q_value(self):
         # default q to 0 for all cell
         q_value = np.ones((self.row, self.col, self.num_actions))*0.1
         # set q_value of going into the wall to low number, so it will
@@ -196,7 +196,8 @@ class RL():
     def man_dist(self, x1, y1, x2, y2):
         return abs(x1 - x2) + abs(y1 - y2)
     
-    # BFS to find if a path is possible, if not replant obstacles
+    # BFS to find if a path from start to goal is possible based on current reward, 
+    # if not replant obstacles
     def bfs(self, reward):
         # case where origin is already obstacle
         if reward[0, 0] == -1:
@@ -262,12 +263,15 @@ class RL():
     # find path
     ################################################################
 
+    # generate a full episode based on current policy
     def generate_episode(self):
         pass # to be defined
 
+    # do policy evaluation and improvement once
     def update_path(self, epsilon):
         pass # to be defined
-            
+
+    # determine the policy to use based on the probability of each action        
     def find_policy_to_use(self, i, j):
         # random number to generate policy
         pol = self.policy[i, j]
@@ -278,6 +282,7 @@ class RL():
             rand -= pol[k]
         return None # should not reach here
     
+    # change the policy at state (i, j) to be epsilon greedy
     def epsilon_greedy(self, epsilon, i, j):
         # find total actions
         permitted_actions = []

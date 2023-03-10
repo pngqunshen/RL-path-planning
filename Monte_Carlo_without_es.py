@@ -4,10 +4,13 @@ import random
 from RL import RL
 
 class Monte_carlo_without_es(RL):
-    def __init__(self, row, col, obstacle_pos = None, goal_pos = None, \
+    def __init__(self, row, col, obstacle_pos = None, goal_pos = None, rolling_window=None, \
                  discount_rate = 0.9, epsilon = None, reward_shape = None, seed = None):
         super().__init__(row, col, obstacle_pos, goal_pos, \
                        discount_rate, epsilon, reward_shape, seed)
+        
+        # params
+        self.rolling_window = rolling_window
 
         # initialise model
         self.Returns = {}
@@ -16,6 +19,7 @@ class Monte_carlo_without_es(RL):
     # find path
     ################################################################
 
+    # generate a full episode based on current policy
     def generate_episode(self):
         i = 0
         j = 0
@@ -64,7 +68,7 @@ class Monte_carlo_without_es(RL):
                 if ((S[0], S[1]), A) not in self.Returns:
                     self.Returns[((S[0], S[1]), A)] = np.empty((0), float)
                 # keep a rolling average window of size == number of state action pair
-                if len(self.Returns[((S[0], S[1]), A)]) == self.row*self.col*self.num_actions:
+                if self.rolling_window == len(self.Returns[((S[0], S[1]), A)]):
                     self.Returns[((S[0], S[1]), A)] = self.Returns[((S[0], S[1]), A)][1:]
                 self.Returns[((S[0], S[1]), A)] = np.append(self.Returns[((S[0], S[1]), A)], g)
                 self.q_value[S[0], S[1], A] = self.Returns[((S[0], S[1]), A)].mean()
