@@ -26,7 +26,7 @@ $$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma Q\le
 
 Update rule:
 
-$$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma \text{max}_{a'}Q\left(S_{t+1}, a'\right)-Q\left(S_t,A_t\right)\right]$$
+$$Q\left(S_t,A_t\right)← Q\left(S_t,A_t\right)+\alpha\left[R_{t+1}+\gamma \text{max}_ {a'}Q\left(S_{t+1}, a'\right)-Q\left(S_t,A_t\right)\right]$$
 
 ![alt text](img/Q_learning_pseudocode.png?raw=true)
 
